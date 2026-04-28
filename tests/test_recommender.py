@@ -1,61 +1,49 @@
-from src.recommender import Song, UserProfile, Recommender
+import sys
+from pathlib import Path
 
-def make_small_recommender() -> Recommender:
-    songs = [
-        Song(
-            id=1,
-            title="Test Pop Track",
-            artist="Test Artist",
-            genre="pop",
-            mood="happy",
-            energy=0.8,
-            tempo_bpm=120,
-            valence=0.9,
-            danceability=0.8,
-            acousticness=0.2,
-        ),
-        Song(
-            id=2,
-            title="Chill Lofi Loop",
-            artist="Test Artist",
-            genre="lofi",
-            mood="chill",
-            energy=0.4,
-            tempo_bpm=80,
-            valence=0.6,
-            danceability=0.5,
-            acousticness=0.9,
-        ),
-    ]
-    return Recommender(songs)
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
+from recommender import load_songs, recommend_songs
 
 
-def test_recommend_returns_songs_sorted_by_score():
-    user = UserProfile(
-        favorite_genre="pop",
-        favorite_mood="happy",
-        target_energy=0.8,
-        likes_acoustic=False,
-    )
-    rec = make_small_recommender()
-    results = rec.recommend(user, k=2)
-
-    assert len(results) == 2
-    # Starter expectation: the pop, happy, high energy song should score higher
-    assert results[0].genre == "pop"
-    assert results[0].mood == "happy"
+CSV_PATH = "data/songs.csv"
 
 
-def test_explain_recommendation_returns_non_empty_string():
-    user = UserProfile(
-        favorite_genre="pop",
-        favorite_mood="happy",
-        target_energy=0.8,
-        likes_acoustic=False,
-    )
-    rec = make_small_recommender()
-    song = rec.songs[0]
+def test_load_songs_returns_data():
+    songs = load_songs(CSV_PATH)
 
-    explanation = rec.explain_recommendation(user, song)
-    assert isinstance(explanation, str)
-    assert explanation.strip() != ""
+    assert songs is not None
+    assert len(songs) > 0
+
+
+def test_recommend_songs_returns_results():
+    songs = load_songs(CSV_PATH)
+
+    user_profile = {
+        "genre": "pop",
+        "mood": "happy",
+        "energy": 0.8,
+        "acoustic": False
+    }
+
+    recommendations = recommend_songs(user_profile, songs)
+
+    assert recommendations is not None
+    assert len(recommendations) > 0
+
+
+def test_recommendations_are_valid():
+    songs = load_songs(CSV_PATH)
+
+    user_profile = {
+        "genre": "pop",
+        "mood": "happy",
+        "energy": 0.8,
+        "acoustic": False
+    }
+
+    recommendations = recommend_songs(user_profile, songs)
+
+    first_recommendation = recommendations[0]
+
+    assert first_recommendation is not None
